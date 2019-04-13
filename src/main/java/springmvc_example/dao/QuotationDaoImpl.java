@@ -15,7 +15,9 @@ import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Projections;
 
 import springmvc_example.helper.Helper;
@@ -39,38 +41,59 @@ public class QuotationDaoImpl implements QuotationDao {
 			e1.printStackTrace();
 		}
 		document = helper.generateId(document);
-		JSONObject js = new JSONObject();
-		String quotationReturn = "";
 		mongoTemplate.insert(document.toString(), COLLECTION_NAME);
-		DBCursor cursor = mongoTemplate.getCollection(COLLECTION_NAME).find();
-		while (cursor.hasNext()) {
-			try {
-				js = new JSONObject(cursor.next().toString());
-				String stringId = js.getString("sub_id");
-				if(sub_id.equals(stringId)) {
-					quotationReturn = js.toString();
-					return quotationReturn;
-				}
-			} catch (JSONException e) {
-				e.printStackTrace();
-			}
-		}
+		MongoClient mongo = new MongoClient("localhost", 27017);
+		MongoDatabase database = mongo.getDatabase("Blog");
+		MongoCollection<Document> collection = database.getCollection(COLLECTION_NAME);
 
-		return quotationReturn;
+		FindIterable<Document> findIterable = collection.find(Filters.eq("sub_id", sub_id))
+				.projection(Projections.exclude("quotation_insured", "quotation_owner", "quotation_coverage"));
+
+		MongoCursor<Document> cursorDocument = findIterable.iterator();
+		findIterable.limit(1);
+		try {
+			while (cursorDocument.hasNext()) {
+				return cursorDocument.next().toJson();
+
+			}
+		
+			} finally {
+
+				mongo.close();
+			}
+		
+
+	return null;
+
 	}
 
 	@Override
-	public ArrayList listQuotation() {
-		ArrayList<JSONObject> listQuotes = new ArrayList<>();
-		DBCursor cursor = mongoTemplate.getCollection(COLLECTION_NAME).find();
-		while (cursor.hasNext()) {
-			try {
-				listQuotes.add(new JSONObject(cursor.next().toString()));
-			} catch (JSONException e) {
-				e.printStackTrace();
+	public String listQuotation() {
+		
+		ArrayList<JSONObject> listQuotesDocument = new ArrayList<>();
+		MongoClient mongo = new MongoClient("localhost", 27017);
+		MongoDatabase database = mongo.getDatabase("Blog");
+		MongoCollection<Document> collection = database.getCollection(COLLECTION_NAME);
+
+		FindIterable<Document> findIterable = collection.find()
+				.projection(Projections.exclude("quotation_insured", "quotation_owner", "quotation_coverage"));
+
+		MongoCursor<Document> cursorDocument = findIterable.iterator();
+
+		try {
+			while (cursorDocument.hasNext()) {
+				listQuotesDocument.add(new JSONObject(cursorDocument.next().toJson()));
+
 			}
+		} catch (JSONException e) {
+			e.printStackTrace();
+		} finally {
+
+			mongo.close();
 		}
-		return listQuotes;
+
+		return listQuotesDocument.toString();
+
 	}
 
 	@Override

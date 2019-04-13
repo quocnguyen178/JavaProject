@@ -9,7 +9,7 @@ public interface QuotationService {
 
 	public String createQuotation(JSONObject document);
 
-	public ArrayList listQuotation();
+	public String listQuotation();
 	
 	public JSONObject infoQuotation(String quotationId) throws JSONException;
 }

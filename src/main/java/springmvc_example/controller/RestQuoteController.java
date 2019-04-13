@@ -107,8 +107,8 @@ public class RestQuoteController {
 
 	@RequestMapping(value = "/list-quotation", method = RequestMethod.GET)
 	public String listQuotation(HttpServletRequest request) {
-		ArrayList list = quotationService.listQuotation();
-		return list.toString();
+		String  list = quotationService.listQuotation();
+		return list;
 	}
 
 	@RequestMapping(value = "/quotation/{id}/insured", method = RequestMethod.GET)

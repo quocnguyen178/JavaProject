@@ -22,7 +22,7 @@ public class QuotationServiceImpl implements QuotationService {
 	}
 
 	@Override
-	public ArrayList listQuotation() {	
+	public String listQuotation() {	
 		return quotationDao.listQuotation();
 	}
 
