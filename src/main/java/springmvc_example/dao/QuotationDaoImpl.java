@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Repository;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
@@ -70,6 +71,14 @@ public class QuotationDaoImpl implements QuotationDao {
 			}
 		}
 		return listQuotes;
+	}
+
+	@Override
+	public JSONObject infoQuotation(String quotationId) throws JSONException {
+		BasicDBObject query = new BasicDBObject();
+		query.put("_id", new ObjectId(quotationId));
+		DBCursor cursor = mongoTemplate.getCollection(COLLECTION_NAME).find(query);
+		return new JSONObject(cursor.next().toString());
 	}
 
 }
