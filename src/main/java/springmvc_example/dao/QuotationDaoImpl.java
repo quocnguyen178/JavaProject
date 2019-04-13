@@ -3,6 +3,7 @@ package springmvc_example.dao;
 import java.util.ArrayList;
 
 import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,33 +30,32 @@ public class QuotationDaoImpl implements QuotationDao {
 	@Override
 	public String createQuotation(JSONObject document) {
 		Helper helper = new Helper();
+		ObjectId doc_id = new ObjectId();
+		String sub_id = "id" + doc_id.getTimestamp();
+		try {
+			document.put("sub_id", sub_id);
+		} catch (JSONException e1) {
+			e1.printStackTrace();
+		}
 		document = helper.generateId(document);
-		// System.out.println(document);
 		JSONObject js = new JSONObject();
-		String mongoReturn = "";
+		String quotationReturn = "";
 		mongoTemplate.insert(document.toString(), COLLECTION_NAME);
 		DBCursor cursor = mongoTemplate.getCollection(COLLECTION_NAME).find();
 		while (cursor.hasNext()) {
 			try {
 				js = new JSONObject(cursor.next().toString());
-				//JSONObject _id = js.getJSONObject("_id");
-				//DBObject id = (DBObject) JSON.parse(_id.toString());
-				String storeList = document.toString();
-				MongoClient client = new MongoClient("localhost");
-				MongoDatabase db = client.getDatabase("Blog");
-				
-				MongoCollection collection = db.getCollection(COLLECTION_NAME);
-				//FindIterable<Document> myDocument = collection.findOneAndUpdate(filter, update)
-				//.projection(Projections.exclude("quotation_owner","quotation_insured","quotation_owner")) ;
-				//System.out.println(myDocument.toString());
-				client.close();
-				mongoReturn = storeList;
+				String stringId = js.getString("sub_id");
+				if(sub_id.equals(stringId)) {
+					quotationReturn = js.toString();
+					return quotationReturn;
+				}
 			} catch (JSONException e) {
 				e.printStackTrace();
 			}
 		}
 
-		return mongoReturn;
+		return quotationReturn;
 	}
 
 	@Override

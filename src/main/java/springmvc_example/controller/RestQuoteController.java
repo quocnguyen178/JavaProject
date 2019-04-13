@@ -80,7 +80,7 @@ public class RestQuoteController {
 	@RequestMapping(value = "/quotation", method = RequestMethod.POST,
 			produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseStatus(value = HttpStatus.CREATED)
-	public String createJson(@RequestBody String body) throws JSONException {
+	public String createQuotation(@RequestBody String body) throws JSONException {
 		JSONObject json_body = new JSONObject(body);
 		Resource resource = new ClassPathResource("document.json");
 		InputStream resourceInputStream = null;
