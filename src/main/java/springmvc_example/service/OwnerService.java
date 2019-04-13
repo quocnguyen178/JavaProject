@@ -2,6 +2,7 @@ package springmvc_example.service;
 
 import java.util.ArrayList;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.mongodb.BasicDBObject;
@@ -11,5 +12,6 @@ public interface OwnerService {
 	
 	public JSONObject infoOwner(String mongoId,String insuredId);
 	
+	public void updateOwner(String mongoId, String ownerId, JSONObject json_request) throws JSONException;
 	//public JSONObject updateOwner(String id, String updateOwner);
 }

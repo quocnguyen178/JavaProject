@@ -10,6 +10,7 @@ import java.util.regex.Matcher;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.log4j.Logger;
+import org.bson.types.ObjectId;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -77,8 +78,7 @@ public class RestQuoteController {
 	 * }
 	 */
 
-	@RequestMapping(value = "/quotation", method = RequestMethod.POST,
-			produces = MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(value = "/quotation", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseStatus(value = HttpStatus.CREATED)
 	public String createQuotation(@RequestBody String body) throws JSONException {
 		JSONObject json_body = new JSONObject(body);
@@ -124,72 +124,25 @@ public class RestQuoteController {
 		return insuredService.infoInsured(mongoId, insuredId).toString();
 	}
 
-	@RequestMapping(value = "/quotation/{mongoId}/insured/{insuredId}", method = RequestMethod.PATCH)
-	public JSONObject updateInsured(@RequestBody String body, @PathVariable(value = "mongoId") String mongoId,
-			@PathVariable(value = "insuredId") String insuredId)
-			throws JSONException {
-		JSONObject json_update = insuredService.infoInsured(mongoId,insuredId);
+	@RequestMapping(value = "/quotation/{mongoId}/owner/{ownerId}", method = RequestMethod.PATCH)
+	public String updateInsured(@RequestBody String body, @PathVariable(value = "mongoId") String mongoId,
+			@PathVariable(value = "ownerId") String ownerId) throws JSONException {
+		// Create JSONOject from json request
 		JSONObject json_request = new JSONObject(body);
-		/************************************************/
-		json_update.put("insured_gender", json_request.getJSONObject("insured_gender"));
-		json_update.put("insured_residence_state", json_request.getJSONObject("insured_residence_state"));
-		json_update.put("insured_date_of_birth", json_request.getString("insured_date_of_birth"));
-		json_update.put("insured_occupation", json_request.getJSONObject("insured_occupation"));
-		json_update.put("insured_annual_income", json_request.getJSONObject("insured_annual_income"));
-		json_update.put("insured_given_name", json_request.getString("insured_given_name"));
-		json_update.put("insured_last_name", json_request.getString("insured_last_name"));
-		json_update.put("insured_annual_income", json_request.getJSONObject("insured_annual_income"));
-		/******************************************************/
-		System.out.println("json update");
-		System.out.println(json_update.getJSONObject("insured_gender"));
-		System.out.println(json_update.getJSONObject("insured_residence_state"));
-		System.out.println(json_update.getString("insured_date_of_birth"));
-		System.out.println(json_update.getJSONObject("insured_occupation"));
-		System.out.println(json_update.getJSONObject("insured_annual_income"));
-		System.out.println(json_update.getString("insured_given_name"));
-		System.out.println(json_update.getString("insured_last_name"));
-		System.out.println(json_update.getJSONObject("insured_annual_income"));
-		/**********************************************************/
-		JSONObject js;
-		JSONObject js1;
-		BasicDBObject searchQuery = new BasicDBObject();
-		searchQuery.put("_id", insuredId);
-		DBCursor cursor = mongoTemplate.getCollection(COLLECTION_NAME).find();
-		JSONObject objectInfo = new JSONObject();
-		while (cursor.hasNext()) {
-			try {
-				js = new JSONObject(cursor.next().toString());
-				JSONArray storeList = js.getJSONArray("quotation_insured");
-				String _id = "";
-				for (int i = 0; i < storeList.length(); i++) {
-					JSONObject info = storeList.getJSONObject(i);
+		ownerService.updateOwner(mongoId, ownerId, json_request);
+		//Chua biet id_insured lay o dau
+		//insuredService.updateInsured(mongoId, insuredId, json_request);
 
-					_id = info.getString("_id");
-					if (insuredId.equals(_id)) {
-						objectInfo = info;
-						js1 = js;
-						js1.put("quotation_insured", json_update);
-						BasicDBObject a = new BasicDBObject();
-						a.put("business_case_id", "");
-						DBObject s = (DBObject) JSON.parse(js1.toString());
-						// mongoTemplate.getCollection(COLLECTION_NAME).findAndModify(query, update);
-						System.out.println(js1.toString());
-					}
-				}
-			} catch (JSONException e) {
-				e.printStackTrace();
-			}
-		}
-
-		return null;
+		return quotationService.infoQuotation(mongoId).toString();
 	}
 
 	/*----------------------Call webservice function F3POAgeCaculation-----------------------------*/
 
 	@RequestMapping(value = "/quotation/{mongoId}/insured/{insuredId}/f3poagecaculation", method = RequestMethod.POST)
 	@ResponseStatus(value = HttpStatus.CREATED)
-	public String f3POAgeCaculation(@PathVariable(value = "mongoId") String mongoId,@PathVariable(value = "mongoId") String insuredId) throws JSONException {
-		String insured = insuredService.infoInsured(mongoId,insuredId).toString();
+	public String f3POAgeCaculation(@PathVariable(value = "mongoId") String mongoId,
+			@PathVariable(value = "mongoId") String insuredId) throws JSONException {
+		String insured = insuredService.infoInsured(mongoId, insuredId).toString();
 		String new_insured = insured.replaceAll("\"", "\\\\\"");
 		System.out.println(new_insured);
 		Resource resource = new ClassPathResource("request_F3POAge.json");
@@ -214,7 +167,7 @@ public class RestQuoteController {
 
 			} catch (Exception e) {
 				e.printStackTrace();
-//				logger.info("Thu" + e.getMessage());
+				// logger.info("Thu" + e.getMessage());
 			}
 			resourceInputStream.close();
 		} catch (IOException e1) {
@@ -233,7 +186,7 @@ public class RestQuoteController {
 	public String infoOwner(@PathVariable(value = "mongoId") String mongoId,
 			@PathVariable(value = "insuredId") String insuredId) {
 
-		return ownerService.infoOwner(mongoId,insuredId).toString();
+		return ownerService.infoOwner(mongoId, insuredId).toString();
 	}
 
 	/*
@@ -244,29 +197,25 @@ public class RestQuoteController {
 	 * (cursor.hasNext()) { return "1"; }else return "0"; //
 	 * System.out.println(cursor.next()); // return cursor.next().toString(); }
 	 */
-	@RequestMapping(value = "/quotation/{id}/coverage", method = RequestMethod.GET,
-			produces = MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(value = "/quotation/{id}/coverage", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	public String listCoverage(HttpServletRequest request, @PathVariable(value = "id") String id) {
 		ArrayList list = coverageService.listCoverage(id);
 		return list.toString();
 	}
-	
-	@RequestMapping(value = "/quotation/{mongoId}/coverage/{coverageId}", method = RequestMethod.GET,
-			produces = MediaType.APPLICATION_JSON_VALUE)
+
+	@RequestMapping(value = "/quotation/{mongoId}/coverage/{coverageId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	public String getCoverageById(@PathVariable(value = "mongoId") String mongoId,
 			@PathVariable(value = "coverageId") String coverage_id) throws JSONException {
 
-		return coverageService.getCoverageById(mongoId,coverage_id).toString();
+		return coverageService.getCoverageById(mongoId, coverage_id).toString();
 	}
-	
-	@RequestMapping(value = "/quotation/{mongoId}/coverage/{coverageId}", method = RequestMethod.PATCH,
-			produces = MediaType.APPLICATION_JSON_VALUE)
+
+	@RequestMapping(value = "/quotation/{mongoId}/coverage/{coverageId}", method = RequestMethod.PATCH, produces = MediaType.APPLICATION_JSON_VALUE)
 	public String update(@PathVariable(value = "mongoId") String mongoId,
-			@PathVariable(value = "coverageId") String coverage_id,
-			@RequestBody String body) throws JSONException {
+			@PathVariable(value = "coverageId") String coverage_id, @RequestBody String body) throws JSONException {
 		JSONObject aa = new JSONObject(body);
 
 		return coverageService.update(mongoId, coverage_id, aa).toString();
 	}
-	
+
 }

@@ -2,6 +2,7 @@ package springmvc_example.service;
 
 import java.util.ArrayList;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,11 @@ public class InsuredServiceImpl implements InsuredService{
 	@Override
 	public JSONObject infoInsured(String mongoId, String insuredId) {
 		return insuredDao.infoInsured(mongoId,insuredId);
+	}
+
+	@Override
+	public void updateInsured(String mongoId, String insuredId, JSONObject json_request) throws JSONException {
+		insuredDao.updateInsured(mongoId, insuredId, json_request);
 	}
 
 }
