@@ -10,7 +10,6 @@ import java.util.regex.Matcher;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.log4j.Logger;
-import org.bson.types.ObjectId;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -26,11 +25,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.mongodb.util.JSON;
 
 import springmvc_example.service.CoverageService;
 import springmvc_example.service.InsuredService;
@@ -138,13 +132,21 @@ public class RestQuoteController {
 
 	/*----------------------Call webservice function F3POAgeCaculation-----------------------------*/
 
-	@RequestMapping(value = "/quotation/{mongoId}/insured/{insuredId}/f3poagecaculation", method = RequestMethod.POST)
+	@RequestMapping(value = "/quotation/{mongoId}/owner/{ownerId}/f3poagecaculation", method = RequestMethod.POST)
 	@ResponseStatus(value = HttpStatus.CREATED)
 	public String f3POAgeCaculation(@PathVariable(value = "mongoId") String mongoId,
-			@PathVariable(value = "mongoId") String insuredId) throws JSONException {
-		String insured = insuredService.infoInsured(mongoId, insuredId).toString();
-		String new_insured = insured.replaceAll("\"", "\\\\\"");
-		System.out.println(new_insured);
+			@PathVariable(value = "ownerId") String onwerId) throws JSONException {
+		JSONObject owner = ownerService.infoOwner(mongoId, onwerId);
+		//String ageCaculation = owner;
+		JSONArray array_owner = new JSONArray();
+		array_owner.put(0, owner);
+		JSONObject quote = new JSONObject();
+		quote.put("productcode", "income-protection");
+		quote.put("quotation_owner", array_owner);
+		System.out.println(quote);
+		
+		String new_owner = quote.toString().replaceAll("\"", "\\\\\"");
+		System.out.println(new_owner);
 		Resource resource = new ClassPathResource("request_F3POAge.json");
 		InputStream resourceInputStream = null;
 		String str = "";
@@ -158,7 +160,7 @@ public class RestQuoteController {
 					buf.append(str);
 				}
 			}
-			String f3 = buf.toString().replaceFirst("\\$", Matcher.quoteReplacement(new_insured));
+			String f3 = buf.toString().replaceFirst("\\$", Matcher.quoteReplacement(new_owner));
 			System.out.println(f3);
 			JSONArray arr = new JSONArray(f3);
 			try {
@@ -167,7 +169,47 @@ public class RestQuoteController {
 
 			} catch (Exception e) {
 				e.printStackTrace();
-				// logger.info("Thu" + e.getMessage());
+			}
+			resourceInputStream.close();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		return json;
+	}
+	/*----------------------Call webservice function F3_ModalPremium_Calculation-----------------------------*/
+	@RequestMapping(value = "/quotation/{mongoId}/f3modalpremiumcalculation", method = RequestMethod.POST)
+	@ResponseStatus(value = HttpStatus.CREATED)
+	public String f3ModalPremiumCalculation(@PathVariable(value = "mongoId") String mongoId
+			) throws JSONException {
+		JSONObject quote = quotationService.infoQuotation(mongoId);
+		//String ageCaculation = owner;
+		
+		System.out.println(quote);
+		
+		String new_owner = quote.toString().replaceAll("\"", "\\\\\"");
+		System.out.println(new_owner);
+		Resource resource = new ClassPathResource("request_F3ModalPremium.json");
+		InputStream resourceInputStream = null;
+		String str = "";
+		String json = "";
+		StringBuffer buf = new StringBuffer();
+		try {
+			resourceInputStream = resource.getInputStream();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(resourceInputStream));
+			if (resourceInputStream != null) {
+				while ((str = reader.readLine()) != null) {
+					buf.append(str);
+				}
+			}
+			String f3 = buf.toString().replaceFirst("\\$", Matcher.quoteReplacement(new_owner));
+			System.out.println(f3);
+			JSONArray arr = new JSONArray(f3);
+			try {
+				json = xeServerController.callXEServerVpms(arr);
+				System.out.println(json);
+
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 			resourceInputStream.close();
 		} catch (IOException e1) {
