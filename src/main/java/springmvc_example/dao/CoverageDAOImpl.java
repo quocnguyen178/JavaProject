@@ -31,7 +31,7 @@ public class CoverageDAOImpl implements CoverageDAO {
 		while (cursor.hasNext()) {
 			try {
 				js = new JSONObject(cursor.next().toString());
-				/*JSONObject id = js.getJSONObject("_id");
+				JSONObject id = js.getJSONObject("_id");
 				String stringId = (String) id.get("$oid");
 				JSONArray storeList = js.getJSONArray("quotation_coverage");
 				String _id = "";
@@ -40,9 +40,9 @@ public class CoverageDAOImpl implements CoverageDAO {
 					_id = info.getString("_id");
 					if (coverage_id.equals(_id)&& mongoId.equals(stringId))
 						objectInfo = info;
-				}*/
+				}
 				
-				if(js.get("sub_id").equals(mongoId)) {
+				/*if(js.get("sub_id").equals(mongoId)) {
 					if(js.get("quotation_coverage") instanceof JSONArray) {
 						JSONArray jarray = (JSONArray) js.get("quotation_coverage");
 						for (int i = 0; i < jarray.length(); i++) {
@@ -52,7 +52,7 @@ public class CoverageDAOImpl implements CoverageDAO {
 							}
 						}
 					}
-				}
+				}*/
 			} catch (JSONException e) {
 				e.printStackTrace();
 			}
@@ -71,21 +71,21 @@ public class CoverageDAOImpl implements CoverageDAO {
 			try {
 				JSONObject tam = new JSONObject();
 				js = new JSONObject(cursor.next().toString());
-				//JSONObject _id = js.getJSONObject("_id");
-				/*String stringID = (String) _id.get("$oid");	
+				JSONObject _id = js.getJSONObject("_id");
+				String stringID = (String) _id.get("$oid");	
 				if(stringID.equals(id)) {
 				JSONObject quote_coverage = js.getJSONArray("quotation_coverage").getJSONObject(0);
 				list.add(quote_coverage);
-				}*/
+				}
 				
-				if(js.get("sub_id").equals(id)) {
+				/*if(js.get("sub_id").equals(id)) {
 					if(js.get("quotation_coverage") instanceof JSONArray) {
 						JSONObject coverage = js.getJSONArray("quotation_coverage").getJSONObject(0);
 						list.add(coverage);
 					}
 				}
 				
-				
+				*/
 				
 			} catch (JSONException e) {
 				e.printStackTrace();
@@ -189,15 +189,19 @@ public class CoverageDAOImpl implements CoverageDAO {
 	}
 
 	@Override
-	public JSONObject update(String mongoId, String coverage_id, JSONObject jsonObject) throws JSONException {
+	public void update(String mongoId, String coverage_id, JSONObject jsonObject) throws JSONException {
 		// TODO Auto-generated method stub
 		DBObject dataNew = (DBObject)JSON.parse(updateCoverage(mongoId, coverage_id, jsonObject).toString()) ;
 		JSONObject js;
 		DBCursor cursor = mongoTemplate.getCollection(COLLECTION_NAME).find();
 		while(cursor.hasNext()) {
 			js = new JSONObject(cursor.next().toString());
-			if(js.get("sub_id").equals(mongoId)) {
-				//System.out.println("Insie Mongo");
+			JSONObject _id = js.getJSONObject("_id");
+			String stringID = (String) _id.get("$oid");	
+			
+			if(stringID.equals(mongoId)) {
+				String subId =(String) js.get("sub_id");
+				//System.out.println("SUB_IS______"+subId);
 				if(js.get("quotation_coverage") instanceof JSONArray) {
 					//System.out.println("Inside ARRAY");
 					JSONArray jarray = (JSONArray) js.get("quotation_coverage");
@@ -206,7 +210,7 @@ public class CoverageDAOImpl implements CoverageDAO {
 						//System.out.println(jo.get("_id"));
 						if(jo.get("_id").equals(coverage_id)) {
 							//System.out.println("Inside Coverage_id");
-							BasicDBObject query = new BasicDBObject("sub_id",mongoId);
+							BasicDBObject query = new BasicDBObject("sub_id",subId);
 							query.put("quotation_coverage._id", coverage_id);
 							BasicDBObject updateObject = new BasicDBObject();
 							updateObject.append("$set",new BasicDBObject("quotation_coverage.$",dataNew));
@@ -220,7 +224,7 @@ public class CoverageDAOImpl implements CoverageDAO {
 			}
 			System.out.println(js.toString());
 		}
-		return updateCoverage(mongoId, coverage_id, jsonObject);
+		//return updateCoverage(mongoId, coverage_id, jsonObject);
 	}
 	
 

@@ -27,9 +27,9 @@ public class CoverageServiceImpl implements CoverageService {
 	}
 
 	@Override
-	public JSONObject update(String mongoID, String coverage_id, JSONObject jsonObject) throws JSONException {
+	public void update(String mongoID, String coverage_id, JSONObject jsonObject) throws JSONException {
 		// TODO Auto-generated method stub
-		return coverageDao.update(mongoID, coverage_id, jsonObject);
+		coverageDao.update(mongoID, coverage_id, jsonObject);
 	}
 
 }

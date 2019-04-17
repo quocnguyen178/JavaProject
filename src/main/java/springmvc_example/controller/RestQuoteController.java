@@ -10,6 +10,7 @@ import java.util.regex.Matcher;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.log4j.Logger;
+import org.bson.types.ObjectId;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -19,12 +20,17 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.fasterxml.jackson.databind.PropertyNamingStrategy.KebabCaseStrategy;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCursor;
 
 import springmvc_example.service.CoverageService;
 import springmvc_example.service.InsuredService;
@@ -52,26 +58,7 @@ public class RestQuoteController {
 	private static Logger logger = Logger.getLogger(RestQuoteController.class);
 
 	XeServerController xeServerController = new XeServerController();
-
-	/*
-	 * // REST
-	 * 
-	 * @RequestMapping(value = "/list-user", method = RequestMethod.GET) public
-	 * List<User> listUser(HttpServletRequest request) { List<User> user =
-	 * userService.listUser(); return user; }
-	 * 
-	 * @RequestMapping(value = "/info/{id}", method = RequestMethod.GET) public User
-	 * infoUser(@PathVariable(value = "id") String id) { return
-	 * userService.findUserById(id); }
-	 * 
-	 * @RequestMapping(value = "/save-user", method = RequestMethod.POST)
-	 * 
-	 * @ResponseStatus(value = HttpStatus.CREATED) public void saveUser(@RequestBody
-	 * User user) { userService.add(user);
-	 * 
-	 * }
-	 */
-
+	
 	@RequestMapping(value = "/quotation", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseStatus(value = HttpStatus.CREATED)
 	public String createQuotation(@RequestBody String body) throws JSONException {
@@ -91,7 +78,25 @@ public class RestQuoteController {
 			}
 			JSONObject document = new JSONObject(buf.toString());
 			quotationReturn = quotationService.createQuotation(document);
-
+			JSONObject jsonObject1 = new JSONObject(quotationReturn);
+			JSONObject temp1 = new JSONObject();
+			temp1.put("method", "POST");
+			temp1.put("rel", "Create");
+			temp1.put("mediaType", "application/json");
+			temp1.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation");
+			JSONArray jsonArray = new JSONArray();
+			JSONObject temp2 = new JSONObject();
+			temp2.put("method", "GET");
+			temp2.put("rel", "Search");
+			temp2.put("mediaType", "application/json");
+			temp2.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation");
+			JSONObject temp3 = new JSONObject();
+			JSONObject jsonOject2 = new JSONObject();
+			jsonOject2.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?");
+			temp3.put("_nextlink", jsonOject2);
+			jsonArray.put(temp1).put(temp2).put(temp3);
+			jsonObject1.put("_options",jsonArray);
+			quotationReturn = jsonObject1.toString();
 			resourceInputStream.close();
 		} catch (IOException e1) {
 			e1.printStackTrace();
@@ -99,35 +104,89 @@ public class RestQuoteController {
 		return quotationReturn;
 	}
 
-	@RequestMapping(value = "/list-quotation", method = RequestMethod.GET)
-	public String listQuotation(HttpServletRequest request) {
+	@RequestMapping(value = "/quotation", method = RequestMethod.GET)
+	public String listQuotation(HttpServletRequest request)throws JSONException {
 		String  list = quotationService.listQuotation();
+		JSONArray jsonArray1 = new JSONArray(list);
+		JSONObject temp1 = new JSONObject();
+		temp1.put("method", "POST");
+		temp1.put("rel", "Create");
+		temp1.put("mediaType", "application/json");
+		temp1.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation");
+		JSONArray jsonArray2 = new JSONArray();
+		JSONObject temp2 = new JSONObject();
+		temp2.put("method", "GET");
+		temp2.put("rel", "Search");
+		temp2.put("mediaType", "application/json");
+		temp2.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation");
+		JSONObject temp3 = new JSONObject();
+		JSONObject jsonOject2 = new JSONObject();
+		jsonOject2.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?");
+		temp3.put("_nextlink", jsonOject2);
+		jsonArray2.put(temp1).put(temp2).put(temp3);
+		JSONObject jsonObject3 = new JSONObject().put("_options",jsonArray2);
+		jsonArray1.put(jsonObject3);
+		list = jsonArray1.toString();
 		return list;
+	}
+	@RequestMapping(value = "/quotation/{quotationId}", method = RequestMethod.GET)
+	public String infoQuotation(HttpServletRequest request, @PathVariable(value = "quotationId") String quotationId) throws JSONException {
+		return quotationService.infoQuotation(quotationId).toString();
 	}
 
 	@RequestMapping(value = "/quotation/{id}/insured", method = RequestMethod.GET)
-	public String listInsured(HttpServletRequest request, @PathVariable(value = "id") String id) {
-		ArrayList list = insuredService.listInsured(id);
-		return list.toString();
+	public String listInsured(HttpServletRequest request, @PathVariable(value = "id") String id) throws JSONException{
+		ArrayList arrayList = insuredService.listInsured(id);
+		String stringList = arrayList.toString();
+		JSONArray jsonArray1 = new JSONArray(stringList);
+		JSONArray jsonArray2 = new JSONArray();
+		JSONObject temp2 = new JSONObject();
+		temp2.put("method", "GET");
+		temp2.put("rel", "Search insured by Id");
+		temp2.put("mediaType", "application/json");
+		temp2.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?/insured");
+		JSONObject temp3 = new JSONObject();
+		JSONObject jsonOject2 = new JSONObject();
+		jsonOject2.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?/insured/in?");
+		temp3.put("_nextlink", jsonOject2);
+		jsonArray2.put(temp2).put(temp3);
+		JSONObject jsonObject3 = new JSONObject().put("_options",jsonArray2);
+		jsonArray1.put(jsonObject3);
+		return jsonArray1.toString();
 	}
 
 	@RequestMapping(value = "/quotation/{mongoId}/insured/{insuredId}", method = RequestMethod.GET)
 	public String infoInsured(@PathVariable(value = "mongoId") String mongoId,
-			@PathVariable(value = "insuredId") String insuredId) {
+			@PathVariable(value = "insuredId") String insuredId)throws JSONException {
 
-		return insuredService.infoInsured(mongoId, insuredId).toString();
+		String insuredReturn = insuredService.infoInsured(mongoId, insuredId).toString();
+		JSONObject jsonObject1 = new JSONObject(insuredReturn);
+		JSONObject temp1 = new JSONObject();
+		temp1.put("method", "GET");
+		temp1.put("rel", "Search insured by Id");
+		temp1.put("mediaType", "application/json");
+		temp1.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?/insured/in?");
+		JSONArray jsonArray = new JSONArray();
+		jsonArray.put(temp1);
+		jsonObject1.put("_options",jsonArray);
+		insuredReturn = jsonObject1.toString();
+		return insuredReturn;
 	}
 
-	@RequestMapping(value = "/quotation/{mongoId}/owner/{ownerId}", method = RequestMethod.PATCH)
+	@RequestMapping(value = "/quotation/{mongoId}/insured/{insuredId}/owner/{ownerId}", method = RequestMethod.PATCH)
 	public String updateInsured(@RequestBody String body, @PathVariable(value = "mongoId") String mongoId,
+			@PathVariable(value = "insuredId") String insuredId,
 			@PathVariable(value = "ownerId") String ownerId) throws JSONException {
 		// Create JSONOject from json request
 		JSONObject json_request = new JSONObject(body);
 		ownerService.updateOwner(mongoId, ownerId, json_request);
-		//Chua biet id_insured lay o dau
-		//insuredService.updateInsured(mongoId, insuredId, json_request);
+		String json_age = f3POAgeCaculation(mongoId, ownerId);
+		
+		ownerService.updateAgeOwner(mongoId, ownerId, json_age);
+		
+		insuredService.updateInsured(mongoId, insuredId, json_request);
 
-		return quotationService.infoQuotation(mongoId).toString();
+		return ownerService.infoOwner(mongoId, ownerId).toString();
 	}
 
 	/*----------------------Call webservice function F3POAgeCaculation-----------------------------*/
@@ -135,8 +194,8 @@ public class RestQuoteController {
 	@RequestMapping(value = "/quotation/{mongoId}/owner/{ownerId}/f3poagecaculation", method = RequestMethod.POST)
 	@ResponseStatus(value = HttpStatus.CREATED)
 	public String f3POAgeCaculation(@PathVariable(value = "mongoId") String mongoId,
-			@PathVariable(value = "ownerId") String onwerId) throws JSONException {
-		JSONObject owner = ownerService.infoOwner(mongoId, onwerId);
+			@PathVariable(value = "ownerId") String ownerId) throws JSONException {
+		JSONObject owner = ownerService.infoOwner(mongoId, ownerId);
 		//String ageCaculation = owner;
 		JSONArray array_owner = new JSONArray();
 		array_owner.put(0, owner);
@@ -219,45 +278,159 @@ public class RestQuoteController {
 	}
 
 	@RequestMapping(value = "/quotation/{id}/owner", method = RequestMethod.GET)
-	public String listOwner(HttpServletRequest request, @PathVariable(value = "id") String id) {
-		ArrayList list = ownerService.listOwner(id);
-		return list.toString();
+	public String listOwner(HttpServletRequest request, @PathVariable(value = "id") String id) throws JSONException{
+		ArrayList arrayList = ownerService.listOwner(id);
+		String stringList = arrayList.toString();
+		JSONArray jsonArray1 = new JSONArray(stringList);
+		JSONArray jsonArray2 = new JSONArray();
+		JSONObject temp1 = new JSONObject();
+		temp1.put("method", "GET");
+		temp1.put("rel", "Search insured by Id");
+		temp1.put("mediaType", "application/json");
+		temp1.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?/owner");
+		JSONObject temp2 = new JSONObject();
+		JSONObject jsonOject2 = new JSONObject();
+		jsonOject2.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?/owner/ow?");
+		temp2.put("_nextlink", jsonOject2);
+		jsonArray2.put(temp1).put(temp2);
+		JSONObject jsonObject3 = new JSONObject().put("_options",jsonArray2);
+		jsonArray1.put(jsonObject3);
+		return jsonArray1.toString();	
 	}
 
-	@RequestMapping(value = "/quotation/{mongoId}/owner/{insuredId}", method = RequestMethod.GET)
+	@RequestMapping(value = "/quotation/{mongoId}/owner/{ownerId}", method = RequestMethod.GET)
 	public String infoOwner(@PathVariable(value = "mongoId") String mongoId,
-			@PathVariable(value = "insuredId") String insuredId) {
+			@PathVariable(value = "ownerId") String ownerId)throws JSONException {
 
-		return ownerService.infoOwner(mongoId, insuredId).toString();
+		String ownerReturn = ownerService.infoOwner(mongoId, ownerId).toString();
+		JSONObject jsonObject1 = new JSONObject(ownerReturn);
+		JSONObject temp1 = new JSONObject();
+		temp1.put("method", "GET");
+		temp1.put("rel", "Search owner by Id");
+		temp1.put("mediaType", "application/json");
+		temp1.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?/owner/ow?");
+		JSONObject temp2 = new JSONObject();
+		temp2.put("method", "PATCH");
+		temp2.put("rel", "Update owner by Id");
+		temp2.put("mediaType", "application/json");
+		temp2.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?/owner/ow?");
+	
+		
+		JSONArray jsonArray = new JSONArray();
+		jsonArray.put(temp1).put(temp2);
+		jsonObject1.put("_options",jsonArray);
+		ownerReturn = jsonObject1.toString();
+		return ownerReturn;
 	}
 
-	/*
-	 * @RequestMapping(value = "/json/{id}", method = RequestMethod.GET) public
-	 * String infoJson(@PathVariable(value = "id") String id) { BasicDBObject query
-	 * = new BasicDBObject(); query.put("value", id); DBCollection table =
-	 * mongoTemplate.getCollection("user"); DBCursor cursor = table.find(query); if
-	 * (cursor.hasNext()) { return "1"; }else return "0"; //
-	 * System.out.println(cursor.next()); // return cursor.next().toString(); }
-	 */
-	@RequestMapping(value = "/quotation/{id}/coverage", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	public String listCoverage(HttpServletRequest request, @PathVariable(value = "id") String id) {
-		ArrayList list = coverageService.listCoverage(id);
-		return list.toString();
+		@RequestMapping(value = "/quotation/{id}/coverage", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+	public String listCoverage(HttpServletRequest request, @PathVariable(value = "id") String id) throws JSONException {
+			ArrayList arrayList = coverageService.listCoverage(id);
+			String stringList = arrayList.toString();
+			JSONArray jsonArray1 = new JSONArray(stringList);
+			JSONArray jsonArray2 = new JSONArray();
+			JSONObject temp1 = new JSONObject();
+			temp1.put("method", "GET");
+			temp1.put("rel", "Search all coverage");
+			temp1.put("mediaType", "application/json");
+			temp1.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?/coverage");
+			JSONObject temp2 = new JSONObject();
+			JSONObject jsonOject2 = new JSONObject();
+			jsonOject2.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?/owner/co?");
+			temp2.put("_nextlink", jsonOject2);
+			jsonArray2.put(temp1).put(temp2);
+			JSONObject jsonObject3 = new JSONObject().put("_options",jsonArray2);
+			jsonArray1.put(jsonObject3);
+			return jsonArray1.toString();
 	}
 
 	@RequestMapping(value = "/quotation/{mongoId}/coverage/{coverageId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	public String getCoverageById(@PathVariable(value = "mongoId") String mongoId,
 			@PathVariable(value = "coverageId") String coverage_id) throws JSONException {
-
-		return coverageService.getCoverageById(mongoId, coverage_id).toString();
+			String coverageReturn = coverageService.getCoverageById(mongoId, coverage_id).toString();
+			JSONObject jsonObject1 = new JSONObject(coverageReturn);
+			JSONObject temp1 = new JSONObject();
+			temp1.put("method", "GET");
+			temp1.put("rel", "Search coverage by Id");
+			temp1.put("mediaType", "application/json");
+			temp1.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?/coverage/co?");
+			JSONObject temp2 = new JSONObject();
+			temp2.put("method", "PATCH");
+			temp2.put("rel", "Update coverage by Id");
+			temp2.put("mediaType", "application/json");
+			temp2.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?/coverage/co?");
+		
+			
+			JSONArray jsonArray = new JSONArray();
+			jsonArray.put(temp1).put(temp2);
+			jsonObject1.put("_options",jsonArray);
+			coverageReturn = jsonObject1.toString();
+			return coverageReturn;
 	}
 
 	@RequestMapping(value = "/quotation/{mongoId}/coverage/{coverageId}", method = RequestMethod.PATCH, produces = MediaType.APPLICATION_JSON_VALUE)
 	public String update(@PathVariable(value = "mongoId") String mongoId,
 			@PathVariable(value = "coverageId") String coverage_id, @RequestBody String body) throws JSONException {
-		JSONObject aa = new JSONObject(body);
+		
+		JSONObject rs = new JSONObject( getCoverageById(mongoId, coverage_id));
+		JSONObject temp1 = new JSONObject();
+		temp1.put("method", "GET");
+		temp1.put("rel", "Search coverage by Id");
+		temp1.put("mediaType", "application/json");
+		temp1.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?/coverage/co?");
+		JSONObject temp2 = new JSONObject();
+		temp2.put("method", "PATCH");
+		temp2.put("rel", "Update coverage by Id");
+		temp2.put("mediaType", "application/json");
+		temp2.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?/coverage/co?");
 
-		return coverageService.update(mongoId, coverage_id, aa).toString();
+		JSONArray jsonArray = new JSONArray();
+		jsonArray.put(temp1).put(temp2);
+		rs.put("_options",jsonArray);
+		
+		JSONObject aa = new JSONObject(body);
+		coverageService.update(mongoId, coverage_id, aa);
+		
+		String tamStr = f3ModalPremiumCalculation(mongoId);
+		JSONObject joStr = new JSONObject(tamStr);
+		//System.out.println("JOSTR_____"+joStr);
+		String result = "";
+		if(joStr.get("modal_premium") instanceof JSONObject) {
+			JSONObject joStr1 = (JSONObject) joStr.get("modal_premium");
+			if(joStr1.get("enum") instanceof JSONArray) {
+				JSONArray jArrStr =(JSONArray) joStr1.get("enum");
+				JSONObject joStr2 = jArrStr.getJSONObject(0);
+				result = (String) joStr2.get("key");
+			}
+		}
+		//System.out.println("KEY___"+result);
+		
+		JSONObject js;
+		DBCursor cursor = mongoTemplate.getCollection(COLLECTION_NAME).find();
+		while(cursor.hasNext()) {
+			js = new JSONObject(cursor.next().toString());
+			JSONObject _id = js.getJSONObject("_id");
+			String stringID = (String) _id.get("$oid");	
+			if(stringID.equals(mongoId)) {
+				String subId =(String) js.get("sub_id");
+				if(js.get("quotation_coverage") instanceof JSONArray) {
+					JSONArray jarray = (JSONArray) js.get("quotation_coverage");
+					for (int i = 0; i < jarray.length(); i++) {
+						JSONObject jo = jarray.getJSONObject(i);
+						if(jo.get("_id").equals(coverage_id)) {
+							BasicDBObject query = new BasicDBObject("sub_id",subId);
+							//query.put("quotation_coverage._id", coverage_id);
+							BasicDBObject updateObject = new BasicDBObject();
+							//updateObject.append("$set",new BasicDBObject("quotation_coverage.$.coverage_premium_type.value",result));
+							updateObject.append("$set",new BasicDBObject("quote_premium_frequency.value",result));
+							mongoTemplate.getCollection(COLLECTION_NAME).update(query, updateObject);
+						}
+					}
+				}
+			}
+		}
+		
+		return rs.toString();
 	}
 
 }

@@ -29,6 +29,11 @@ public class OwnerServiceImp implements OwnerService {
 	public void updateOwner(String mongoId, String ownerId, JSONObject json_request) throws JSONException {
 		ownerDao.updateOwner(mongoId, ownerId, json_request);
 	}
+
+	@Override
+	public void updateAgeOwner(String mongoId, String ownerId, String json_age) throws JSONException {
+		ownerDao.updateAgeOwner(mongoId, ownerId, json_age);
+	}
 	
 	/*
 	 * @Override public JSONObject updateOwner(String id, String updateOwner) {

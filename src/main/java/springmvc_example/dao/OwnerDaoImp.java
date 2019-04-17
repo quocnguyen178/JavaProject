@@ -73,40 +73,81 @@ public class OwnerDaoImp implements OwnerDao {
 		BasicDBObject query = new BasicDBObject();
 		BasicDBObject set = new BasicDBObject();
 		BasicDBObject update = new BasicDBObject();
-
-		boolean isInsured = json_request.getJSONObject("quote_owner_same_as_insured").getBoolean("value");
-		String gender = json_request.getJSONObject("quote_owner_gender").getString("value");
-		String residenceState = json_request.getJSONObject("quote_owner_residence_state").getString("value");
-		String dateOfBirth = json_request.getString("quote_owner_date_of_birth");
-		String occupation = json_request.getJSONObject("quote_owner_occupation").getString("value");
-		String annualIncome = json_request.getJSONObject("quote_owner_annual_income").getString("value");
-		String annualIncomeMin = json_request.getJSONObject("quote_owner_annual_income").getString("minvalue");
-		String annualIncomeMax = json_request.getJSONObject("quote_owner_annual_income").getString("maxvalue");
-		String smokingStatus = json_request.getJSONObject("quote_owner_smoking_status").getString("value");
-		String givenName = json_request.getString("quote_owner_given_name");
-		String lastName = json_request.getString("quote_owner_last_name");
-		String title = json_request.getJSONObject("quote_owner_title").getString("value");
-		String nationality = json_request.getJSONObject("quote_owner_nationality").getString("value");
-		String marialStatus = json_request.getJSONObject("quote_owner_marital_status").getString("value");
 		
 		// Update quotation_owner
 		query.put("quotation_owner._id", ownerId);
 		query.put("_id", new ObjectId(mongoId));
-		set.put("quotation_owner.$.quote_owner_title.value", title);
-		set.put("quotation_owner.$.quote_owner_given_name", givenName);
-		set.put("quotation_owner.$.quote_owner_gender.value", gender);
-		set.put("quotation_owner.$.quote_owner_annual_income.value", annualIncome);
-		set.put("quotation_owner.$.quote_owner_annual_income.minvalue", annualIncomeMin);
-		set.put("quotation_owner.$.quote_owner_annual_income.maxvalue", annualIncomeMax);
-		set.put("quotation_owner.$.quote_owner_residence_state.value", residenceState);
-		set.put("quotation_owner.$.quote_owner_date_of_birth", dateOfBirth);
-		set.put("quotation_owner.$.quote_owner_last_name", lastName);
-		set.put("quotation_owner.$.quote_owner_full_name", givenName + " " + lastName);
-		set.put("quotation_owner.$.quote_owner_smoking_status.value", smokingStatus);
-		set.put("quotation_owner.$.quote_owner_nationality.value", nationality);
-		set.put("quotation_owner.$.quote_owner_marital_status.value", marialStatus);
-		set.put("quotation_owner.$.quote_owner_occupation.value", occupation);
 		
+		/*if(json_request.getBoolean("quote-owner-same-as-insured") == true) {
+			boolean isInsured = json_request.getBoolean("quote-owner-same-as-insured");
+			set.put("quotation_owner.$.quote_owner_same_as_insured.value", isInsured);
+		}*/
+		if(json_request.has("quote-owner-gender")) {
+			String gender = json_request.getString("quote-owner-gender");
+			set.put("quotation_owner.$.quote_owner_gender.value", gender);
+		}
+		if(json_request.has("quote-owner-residence-state")) {
+			String residenceState = json_request.getString("quote-owner-residence-state");
+			set.put("quotation_owner.$.quote_owner_residence_state.value", residenceState);
+		}
+		if(json_request.has("quote-owner-birth-date")) {
+			String dateOfBirth = json_request.getString("quote-owner-birth-date");
+			set.put("quotation_owner.$.quote_owner_date_of_birth", dateOfBirth);
+		}
+		if(json_request.has("quote-owner-occupation")) {
+			String occupation = json_request.getString("quote-owner-occupation");
+			set.put("quotation_owner.$.quote_owner_occupation.value", occupation);
+		}
+		if(json_request.has("quote-owner-annual-income")) {
+			String annualIncome = json_request.getString("quote-owner-annual-income");
+			set.put("quotation_owner.$.quote_owner_annual_income.value", annualIncome);
+		}
+		if(json_request.has("quote-owner-smoking-status")) {
+			String smokingStatus = json_request.getString("quote-owner-smoking-status");
+			set.put("quotation_owner.$.quote_owner_smoking_status.value", smokingStatus);
+		}
+		if(json_request.has("quote-owner-given-name")) {
+			String givenName = json_request.getString("quote-owner-given-name");
+			set.put("quotation_owner.$.quote_owner_given_name", givenName);
+		}
+		if(json_request.has("quote-owner-last-name")) {
+			String lastName = json_request.getString("quote-owner-last-name");
+			set.put("quotation_owner.$.quote_owner_last_name", lastName);
+		}
+		if(json_request.has("quote-owner-last-name") && json_request.has("quote-owner-given-name")) {
+			String lastName = json_request.getString("quote-owner-last-name");
+			String givenName = json_request.getString("quote-owner-given-name");
+			set.put("quotation_owner.$.quote_owner_full_name", givenName + " " + lastName);
+		}
+		if(json_request.has("quote-owner-title")) {
+			String title = json_request.getString("quote-owner-title");
+			set.put("quotation_owner.$.quote_owner_title.value", title);
+		}
+		if(json_request.has("quote-owner-nationality")) {
+			String nationality = json_request.getString("quote-owner-nationality");
+			set.put("quotation_owner.$.quote_owner_nationality.value", nationality);
+		}
+		if(json_request.has("quote-owner-marital-status")) {
+			String marialStatus = json_request.getString("quote-owner-marital-status");
+			set.put("quotation_owner.$.quote_owner_marital_status.value", marialStatus);
+		}
+		update.put("$set", set);
+		mongoTemplate.getCollection(COLLECTION_NAME).update(query, update);
+	}
+
+	@Override
+	public void updateAgeOwner(String mongoId, String ownerId, String json_age) throws JSONException {
+		JSONObject json_xe = new JSONObject(json_age);
+		String next_birthday = json_xe.getJSONArray("quotation_owner").getJSONObject(0).get("owner_age").toString();
+		
+		BasicDBObject query = new BasicDBObject();
+		BasicDBObject set = new BasicDBObject();
+		BasicDBObject update = new BasicDBObject();
+		
+		// Update quotation_owner
+		query.put("quotation_owner._id", ownerId);
+		query.put("_id", new ObjectId(mongoId));
+		set.put("quotation_owner.$.quote_owner_age_next_birthday", next_birthday);
 		update.put("$set", set);
 		mongoTemplate.getCollection(COLLECTION_NAME).update(query, update);
 	}

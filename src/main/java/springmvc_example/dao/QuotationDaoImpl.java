@@ -17,6 +17,7 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.DBCollectionFindOptions;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Projections;
 
@@ -100,7 +101,13 @@ public class QuotationDaoImpl implements QuotationDao {
 	public JSONObject infoQuotation(String quotationId) throws JSONException {
 		BasicDBObject query = new BasicDBObject();
 		query.put("_id", new ObjectId(quotationId));
-		DBCursor cursor = mongoTemplate.getCollection(COLLECTION_NAME).find(query);
+		DBCollectionFindOptions options = new DBCollectionFindOptions();
+        BasicDBObject projection = new BasicDBObject();
+        projection.put("quotation_insured", 0);
+        projection.put("quotation_owner", 0);
+        projection.put("quotation_coverage", 0);
+        options.projection(projection);
+        DBCursor cursor = mongoTemplate.getCollection(COLLECTION_NAME).find(query, options);
 		return new JSONObject(cursor.next().toString());
 	}
 

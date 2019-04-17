@@ -9,6 +9,6 @@ public interface CoverageService {
 	public ArrayList listCoverage(String id);
 	
 	public JSONObject getCoverageById(String mongoId,String coId) throws JSONException;
-	public JSONObject update(String mongoID,String coverage_id, JSONObject jsonObject) throws JSONException;
+	public void update(String mongoID,String coverage_id, JSONObject jsonObject) throws JSONException;
 	
 }

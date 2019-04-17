@@ -14,4 +14,6 @@ public interface OwnerDao<T> {
 	
 	//public JSONObject updateOwner(String id, String updateOwner);
 	public void updateOwner(String mongoId, String ownerId, JSONObject json_request) throws JSONException;
+	
+	public void updateAgeOwner(String mongoId,String ownerId,String json_age) throws JSONException;
 }
