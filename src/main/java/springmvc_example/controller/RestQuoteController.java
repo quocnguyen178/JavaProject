@@ -112,13 +112,13 @@ public class RestQuoteController {
 		temp1.put("method", "POST");
 		temp1.put("rel", "Create");
 		temp1.put("mediaType", "application/json");
-		temp1.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation");
+		temp1.put("self",new JSONObject().put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation"));
 		JSONArray jsonArray2 = new JSONArray();
 		JSONObject temp2 = new JSONObject();
 		temp2.put("method", "GET");
 		temp2.put("rel", "Search");
 		temp2.put("mediaType", "application/json");
-		temp2.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation");
+		temp2.put("self",new JSONObject().put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation"));
 		JSONObject temp3 = new JSONObject();
 		JSONObject jsonOject2 = new JSONObject();
 		jsonOject2.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?");
@@ -131,7 +131,31 @@ public class RestQuoteController {
 	}
 	@RequestMapping(value = "/quotation/{quotationId}", method = RequestMethod.GET)
 	public String infoQuotation(HttpServletRequest request, @PathVariable(value = "quotationId") String quotationId) throws JSONException {
-		return quotationService.infoQuotation(quotationId).toString();
+		String quotationReturn = quotationService.infoQuotation(quotationId).toString();
+		JSONObject jsonObject1 = new JSONObject(quotationReturn);
+		JSONObject temp1 = new JSONObject();
+		temp1.put("method", "POST");
+		temp1.put("rel", "Create");
+		temp1.put("mediaType", "application/json");
+		temp1.put("self",new JSONObject().put("href","http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/"+quotationId));
+		
+		JSONArray jsonArray = new JSONArray();
+		JSONArray temp3 = new JSONArray();
+		JSONObject jsonObject2 = new JSONObject();
+		JSONObject jsonObject3 = new JSONObject();
+		JSONObject jsonObject4 = new JSONObject();
+		JSONObject jsonObject5 = new JSONObject();
+		jsonObject2.put("owner", new JSONObject().put("href","http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/"+quotationId+"/owner"));
+		jsonObject3.put("insured",new JSONObject().put("href","http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/"+quotationId+"/insured"));
+		jsonObject4.put("coverage", new JSONObject().put("href","http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/"+quotationId+"/coverage"));
+		
+		temp3.put(jsonObject2).put(jsonObject3).put(jsonObject4);
+		jsonObject5.put("_nextlink", temp3);
+		jsonArray.put(temp1).put(jsonObject5);
+		jsonObject1.put("_options",jsonArray);
+		quotationReturn = jsonObject1.toString();
+		
+		return quotationReturn;
 	}
 
 	@RequestMapping(value = "/quotation/{id}/insured", method = RequestMethod.GET)
@@ -144,10 +168,10 @@ public class RestQuoteController {
 		temp2.put("method", "GET");
 		temp2.put("rel", "Search insured by Id");
 		temp2.put("mediaType", "application/json");
-		temp2.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?/insured");
+		temp2.put("self",new JSONObject().put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/"+id+"/insured"));
 		JSONObject temp3 = new JSONObject();
 		JSONObject jsonOject2 = new JSONObject();
-		jsonOject2.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?/insured/in?");
+		jsonOject2.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/"+id+"/insured/in?");
 		temp3.put("_nextlink", jsonOject2);
 		jsonArray2.put(temp2).put(temp3);
 		JSONObject jsonObject3 = new JSONObject().put("_options",jsonArray2);
@@ -165,7 +189,7 @@ public class RestQuoteController {
 		temp1.put("method", "GET");
 		temp1.put("rel", "Search insured by Id");
 		temp1.put("mediaType", "application/json");
-		temp1.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?/insured/in?");
+		temp1.put("self",new JSONObject().put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/"+mongoId+"/insured/"+insuredId));
 		JSONArray jsonArray = new JSONArray();
 		jsonArray.put(temp1);
 		jsonObject1.put("_options",jsonArray);
@@ -186,7 +210,22 @@ public class RestQuoteController {
 		
 		insuredService.updateInsured(mongoId, insuredId, json_request);
 
-		return ownerService.infoOwner(mongoId, ownerId).toString();
+		String ownerReturn = ownerService.infoOwner(mongoId, ownerId).toString();
+		JSONObject jsonObject1 = new JSONObject(ownerReturn);
+
+		JSONObject temp1 = new JSONObject();
+		temp1.put("method", "PATCH");
+		temp1.put("rel", "Update owner by Id");
+		temp1.put("mediaType", "application/json");
+		temp1.put("self",new JSONObject().put("href","http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/"+mongoId+"/insured/"+insuredId+"/owner/"+ownerId));
+	
+		
+		JSONArray jsonArray = new JSONArray();
+		jsonArray.put(temp1);
+		jsonObject1.put("_options",jsonArray);
+		ownerReturn = jsonObject1.toString();
+		return ownerReturn;
+		
 	}
 
 	/*----------------------Call webservice function F3POAgeCaculation-----------------------------*/
@@ -287,10 +326,10 @@ public class RestQuoteController {
 		temp1.put("method", "GET");
 		temp1.put("rel", "Search insured by Id");
 		temp1.put("mediaType", "application/json");
-		temp1.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?/owner");
+		temp1.put("self",new JSONObject().put("href","http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/"+id+"/owner"));
 		JSONObject temp2 = new JSONObject();
 		JSONObject jsonOject2 = new JSONObject();
-		jsonOject2.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?/owner/ow?");
+		jsonOject2.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/"+id+"/owner/ow?");
 		temp2.put("_nextlink", jsonOject2);
 		jsonArray2.put(temp1).put(temp2);
 		JSONObject jsonObject3 = new JSONObject().put("_options",jsonArray2);
@@ -308,12 +347,12 @@ public class RestQuoteController {
 		temp1.put("method", "GET");
 		temp1.put("rel", "Search owner by Id");
 		temp1.put("mediaType", "application/json");
-		temp1.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?/owner/ow?");
+		temp1.put("self",new JSONObject().put("href","http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/"+mongoId+"/owner/"+ownerId));
 		JSONObject temp2 = new JSONObject();
 		temp2.put("method", "PATCH");
 		temp2.put("rel", "Update owner by Id");
 		temp2.put("mediaType", "application/json");
-		temp2.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?/owner/ow?");
+		temp2.put("self",new JSONObject().put("href","http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/"+mongoId+"/owner/"+ownerId));
 	
 		
 		JSONArray jsonArray = new JSONArray();
@@ -333,10 +372,10 @@ public class RestQuoteController {
 			temp1.put("method", "GET");
 			temp1.put("rel", "Search all coverage");
 			temp1.put("mediaType", "application/json");
-			temp1.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?/coverage");
+			temp1.put("self",new JSONObject().put("href","http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/"+id+"/coverage"));
 			JSONObject temp2 = new JSONObject();
 			JSONObject jsonOject2 = new JSONObject();
-			jsonOject2.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?/owner/co?");
+			jsonOject2.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/"+id+"/owner/co?");
 			temp2.put("_nextlink", jsonOject2);
 			jsonArray2.put(temp1).put(temp2);
 			JSONObject jsonObject3 = new JSONObject().put("_options",jsonArray2);
@@ -353,12 +392,12 @@ public class RestQuoteController {
 			temp1.put("method", "GET");
 			temp1.put("rel", "Search coverage by Id");
 			temp1.put("mediaType", "application/json");
-			temp1.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?/coverage/co?");
+			temp1.put("self",new JSONObject().put("href","http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?/coverage/"+coverage_id));
 			JSONObject temp2 = new JSONObject();
 			temp2.put("method", "PATCH");
 			temp2.put("rel", "Update coverage by Id");
 			temp2.put("mediaType", "application/json");
-			temp2.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?/coverage/co?");
+			temp2.put("self",new JSONObject().put("href","http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/"+mongoId+"/coverage/"+coverage_id));
 		
 			
 			JSONArray jsonArray = new JSONArray();
@@ -377,12 +416,12 @@ public class RestQuoteController {
 		temp1.put("method", "GET");
 		temp1.put("rel", "Search coverage by Id");
 		temp1.put("mediaType", "application/json");
-		temp1.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?/coverage/co?");
+		temp1.put("self",new JSONObject().put("href","http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/"+mongoId+"/coverage/"+coverage_id));
 		JSONObject temp2 = new JSONObject();
 		temp2.put("method", "PATCH");
 		temp2.put("rel", "Update coverage by Id");
 		temp2.put("mediaType", "application/json");
-		temp2.put("href", "http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/$oid?/coverage/co?");
+		temp2.put("self",new JSONObject().put("href","http://localhost:8080/SpringMvcMongodbExample/omni-new-business-services/omni/service/quotation/"+mongoId+"/coverage/"+coverage_id));
 
 		JSONArray jsonArray = new JSONArray();
 		jsonArray.put(temp1).put(temp2);
